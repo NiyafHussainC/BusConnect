@@ -6,12 +6,13 @@ import { Input, Select } from "@/components/ui/Input";
 import { MapPin, Calendar, Users, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { indiaStatesData } from "@/lib/data/indiaStates";
 
 export default function PlanTrip() {
     const router = useRouter();
     const [journeyType, setJourneyType] = useState("oneway");
     const [searchData, setSearchData] = useState({
-        state: "Karnataka",
+        state: "", // Require user selection
         district: "",
         startDate: "",
         endDate: "",
@@ -78,21 +79,25 @@ export default function PlanTrip() {
                     {/* Pickup Region */}
                     <Select
                         label="Pickup State"
+                        required
                         value={searchData.state}
-                        onChange={(e) => setSearchData({ ...searchData, state: e.target.value })}
-                        options={[{ value: "Karnataka", label: "Karnataka" }]}
-                        disabled
+                        onChange={(e) => setSearchData({ ...searchData, state: e.target.value, district: "" })}
+                        options={[
+                            { value: "", label: "Select State" },
+                            ...Object.keys(indiaStatesData).map(s => ({ value: s, label: s }))
+                        ]}
                     />
                     <Select
                         label="Pickup District/City"
                         required
                         value={searchData.district}
                         onChange={(e) => setSearchData({ ...searchData, district: e.target.value })}
+                        disabled={!searchData.state}
                         options={[
                             { value: "", label: "Select District" },
-                            { value: "Bangalore", label: "Bangalore" },
-                            { value: "Mysore", label: "Mysore" },
-                            { value: "Mangalore", label: "Mangalore" },
+                            ...(searchData.state && indiaStatesData[searchData.state]
+                                ? indiaStatesData[searchData.state].map(d => ({ value: d, label: d }))
+                                : [])
                         ]}
                     />
 

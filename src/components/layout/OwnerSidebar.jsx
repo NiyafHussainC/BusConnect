@@ -43,7 +43,7 @@ export function OwnerSidebar() {
             </div>
 
             <div className="absolute bottom-0 w-full p-6 border-t border-white/10">
-                <button className="flex items-center gap-3 text-slate-400 hover:text-red-400 transition-colors text-sm font-medium w-full">
+                <button onClick={logout} className="flex items-center gap-3 text-slate-400 hover:text-red-400 transition-colors text-sm font-medium w-full">
                     <LogOut className="w-5 h-5" />
                     Sign Out
                 </button>

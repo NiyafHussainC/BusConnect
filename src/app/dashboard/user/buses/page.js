@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { Users, Grid, Wifi, Zap, Music, Wind, Filter, AlertCircle, ArrowLeft, Star, CheckCircle } from "lucide-react";
+import { Users, Grid, Wifi, Zap, Music, Wind, Filter, AlertCircle, ArrowLeft, Star, CheckCircle, Calendar, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -16,9 +16,9 @@ const ALL_BUSES = [
         seats: 40,
         ac: true,
         rating: 4.8,
-        district: "Bangalore",
+        district: "Bengaluru Urban", // Using valid Karnataka district
         image: "/hero.png",
-        availability: { "2024-02-10": false },
+        availability: { "2026-03-05": false, "2026-03-06": false },
         layout: "2x2",
         amenities: ["AC", "WiFi", "Charging", "Pushback"],
         pricePerDay: 4500
@@ -30,7 +30,7 @@ const ALL_BUSES = [
         seats: 20,
         ac: false,
         rating: 4.5,
-        district: "Bangalore",
+        district: "Bengaluru Urban",
         image: "/hero.png",
         availability: {},
         layout: "2x1",
@@ -44,7 +44,7 @@ const ALL_BUSES = [
         seats: 30,
         ac: true,
         rating: 4.2,
-        district: "Mysore",
+        district: "Mysuru",
         image: "/hero.png",
         availability: {},
         layout: "2x3",
@@ -58,7 +58,7 @@ const ALL_BUSES = [
         seats: 40,
         ac: false,
         rating: 4.0,
-        district: "Bangalore",
+        district: "Bengaluru Urban",
         image: "/hero.png",
         availability: {},
         layout: "2x2",
@@ -72,7 +72,7 @@ const ALL_BUSES = [
         seats: 45,
         ac: true,
         rating: 4.9,
-        district: "Mangalore",
+        district: "Dakshina Kannada",
         image: "/hero.png",
         availability: {},
         layout: "2x2",
@@ -81,6 +81,87 @@ const ALL_BUSES = [
         isBooked: true
     }
 ];
+
+// Reusable Modal Component to show next 30 days
+function AvailabilityModal({ bus, onClose }) {
+    if (!bus) return null;
+
+    // Generate upcoming 30 days
+    const today = new Date();
+    const days = Array.from({ length: 30 }).map((_, i) => {
+        const d = new Date(today);
+        d.setDate(today.getDate() + i);
+        // Format to YYYY-MM-DD
+        const dateString = d.toISOString().split("T")[0];
+
+        // Simple logic for checking the dictionary
+        const isBooked = bus.availability && bus.availability[dateString] === false;
+
+        return {
+            date: d,
+            dateString,
+            isBooked
+        };
+    });
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
+            <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col max-h-[90vh]">
+                <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                    <h3 className="text-lg font-bold flex items-center gap-2">
+                        <Calendar className="w-5 h-5 text-indigo-600" />
+                        Availability: {bus.agency}
+                    </h3>
+                    <button onClick={onClose} className="p-1 hover:bg-slate-200 rounded-full text-slate-500 transition-colors">
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+
+                <div className="p-6 overflow-y-auto">
+                    <p className="text-sm text-slate-500 mb-6">
+                        Showing bus availability for the next 30 days. Booked dates are marked in red.
+                    </p>
+
+                    <div className="grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-400 mb-2">
+                        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                    </div>
+
+                    <div className="grid grid-cols-7 gap-2">
+                        {/* Empty padding for start of month alignment (simplified: just lists days consecutively from today) */}
+                        {days.map((dayObj, i) => {
+                            const isToday = i === 0;
+                            const statusColor = dayObj.isBooked
+                                ? "bg-red-50 text-red-700 border-red-200"
+                                : "bg-green-50 text-green-700 border-green-200 hover:bg-green-100 cursor-pointer";
+
+                            return (
+                                <div
+                                    key={dayObj.dateString}
+                                    className={`aspect-square sm:aspect-auto sm:h-auto sm:py-2 flex flex-col items-center justify-center rounded-lg border ${statusColor} relative`}
+                                    title={`${dayObj.date.toLocaleDateString()} - ${dayObj.isBooked ? 'Booked' : 'Available'}`}
+                                >
+                                    <span className="text-xs sm:text-sm font-semibold">{dayObj.date.getDate()}</span>
+                                    {isToday && <span className="absolute bottom-0 text-[8px] font-bold uppercase tracking-wider mb-1 hidden sm:block">Today</span>}
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <div className="flex justify-between items-center mt-6 pt-4 border-t border-slate-100 text-sm">
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-sm bg-green-500"></div>
+                            <span className="text-slate-600">Available</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-sm bg-red-500"></div>
+                            <span className="text-slate-600">Booked</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 function BusResultsContent() {
     const searchParams = useSearchParams();
@@ -93,6 +174,9 @@ function BusResultsContent() {
     const tripType = searchParams.get("type");
     const days = searchParams.get("days");
     const startDate = searchParams.get("startDate");
+
+    // Modal State
+    const [viewingBusDates, setViewingBusDates] = useState(null);
 
     // Filter Logic
     const filteredBuses = ALL_BUSES.filter(bus => {
@@ -227,13 +311,23 @@ function BusResultsContent() {
                                             </>
                                         )}
                                     </div>
-                                    <Button
-                                        variant="accent"
-                                        disabled={bus.isBooked}
-                                        onClick={() => handleRequestBus(bus.id)}
-                                    >
-                                        {bus.isBooked ? "Unavailable" : "Request This Bus"}
-                                    </Button>
+                                    <div className="flex flex-col gap-2">
+                                        <Button
+                                            variant="outline"
+                                            className="text-xs h-8 text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+                                            onClick={() => setViewingBusDates(bus)}
+                                            disabled={bus.isBooked}
+                                        >
+                                            <Calendar className="w-3 h-3 mr-1" /> View Availability
+                                        </Button>
+                                        <Button
+                                            variant="accent"
+                                            disabled={bus.isBooked}
+                                            onClick={() => handleRequestBus(bus.id)}
+                                        >
+                                            {bus.isBooked ? "Unavailable" : "Request This Bus"}
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
                         </Card>
@@ -261,6 +355,14 @@ function BusResultsContent() {
                     </Card>
                 </div>
             </div>
+
+            {/* Render Modal */}
+            {viewingBusDates && (
+                <AvailabilityModal
+                    bus={viewingBusDates}
+                    onClose={() => setViewingBusDates(null)}
+                />
+            )}
         </div>
     );
 }

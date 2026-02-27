@@ -2,20 +2,19 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { useTheme } from "@/context/ThemeContext";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { User, Sun, Moon, Monitor, LogOut, CheckCircle, Save, Lock, ChevronDown, ChevronUp } from "lucide-react";
+import { Building2, Lock, CheckCircle, Save, ChevronDown, ChevronUp } from "lucide-react";
 
-export default function SettingsPage() {
-    const { user, updateUser, logout, changePassword } = useAuth();
-    const { theme, setTheme } = useTheme();
+export default function OwnerSettingsPage() {
+    const { user, updateUser, changePassword } = useAuth();
 
     const [formData, setFormData] = useState({
         name: "",
-        email: "",
-        mobile: ""
+        company: "",
+        mobile: "",
+        city: "",
     });
 
     const [loading, setLoading] = useState(false);
@@ -34,8 +33,9 @@ export default function SettingsPage() {
         if (user) {
             setFormData({
                 name: user.name || "",
-                email: user.email || "",
-                mobile: user.mobile || ""
+                company: user.company || "",
+                mobile: user.phone || "",
+                city: user.city || "",
             });
         }
     }, [user]);
@@ -49,7 +49,9 @@ export default function SettingsPage() {
         setTimeout(() => {
             const result = updateUser({
                 name: formData.name,
-                mobile: formData.mobile
+                company: formData.company,
+                phone: formData.mobile,
+                city: formData.city
             });
 
             setLoading(false);
@@ -91,56 +93,61 @@ export default function SettingsPage() {
     };
 
     return (
-        <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
-            <div className="text-center">
-                <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-                <p className="text-muted">Manage your profile and preferences</p>
+        <div className="max-w-4xl space-y-8 animate-in fade-in duration-500">
+            <div>
+                <h1 className="text-2xl font-bold text-slate-900 mb-2">Agency Settings</h1>
+                <p className="text-slate-500">Manage your agency profile and account security</p>
             </div>
 
-            <div className="max-w-2xl mx-auto space-y-6">
-
+            <div className="grid gap-8">
                 {/* Profile Settings */}
                 <Card className="p-6">
                     <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
-                            <User className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                        <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                            <Building2 className="w-5 h-5 text-indigo-600" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-foreground">Profile Information</h2>
-                            <p className="text-sm text-muted">Update your account details</p>
+                            <h2 className="text-lg font-bold text-slate-900">Agency Information</h2>
+                            <p className="text-sm text-slate-500">Update your public agency details</p>
                         </div>
                     </div>
 
                     <form onSubmit={handleProfileUpdate} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <Input
-                                label="Full Name"
+                                label="Contact Person Name"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             />
                             <Input
-                                label="Mobile Number"
+                                label="Agency / Company Name"
+                                value={formData.company}
+                                onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Input
+                                label="Contact Number"
                                 placeholder="+91 98765 43210"
                                 value={formData.mobile}
                                 onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
                             />
+                            <Input
+                                label="Primary Operating City"
+                                value={formData.city}
+                                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                            />
                         </div>
 
-                        <Input
-                            label="Email Address"
-                            value={formData.email}
-                            disabled
-                            className="bg-muted/20 text-muted cursor-not-allowed"
-                        />
-
-                        <div className="pt-4 flex items-center justify-center gap-3">
+                        <div className="pt-4 flex items-center justify-start gap-3">
                             <Button
                                 type="submit"
                                 variant="primary"
                                 disabled={loading}
                                 className="flex items-center gap-2"
                             >
-                                {loading ? "Saving..." : <><Save className="w-4 h-4" /> Save Changes</>}
+                                {loading ? "Saving..." : <><Save className="w-4 h-4" /> Save Details</>}
                             </Button>
 
                             {success && (
@@ -152,33 +159,6 @@ export default function SettingsPage() {
                     </form>
                 </Card>
 
-                {/* Theme & Preferences */}
-                <Card className="p-6">
-                    <div className="flex items-center justify-between">
-                        <h3 className="font-bold text-foreground">Appearance</h3>
-
-                        <div className="flex items-center gap-2">
-                            {[
-                                { id: "light", icon: Sun },
-                                { id: "dark", icon: Moon },
-                                { id: "system", icon: Monitor }
-                            ].map((item) => (
-                                <button
-                                    key={item.id}
-                                    onClick={() => setTheme(item.id)}
-                                    className={`p-2 rounded-lg border transition-all ${theme === item.id
-                                        ? "border-orange-500 bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400"
-                                        : "border-slate-200 hover:border-slate-300 dark:border-slate-700 dark:hover:border-slate-600 dark:text-slate-300"
-                                        }`}
-                                    title={`${item.id.charAt(0).toUpperCase() + item.id.slice(1)} Mode`}
-                                >
-                                    <item.icon className="w-5 h-5" />
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </Card>
-
                 {/* Security Settings */}
                 <Card className="p-6">
                     <div
@@ -186,15 +166,15 @@ export default function SettingsPage() {
                         onClick={() => setIsSecurityExpanded(!isSecurityExpanded)}
                     >
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center transition-colors group-hover:bg-slate-200 dark:group-hover:bg-slate-700">
-                                <Lock className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center transition-colors group-hover:bg-slate-200">
+                                <Lock className="w-5 h-5 text-slate-600" />
                             </div>
                             <div>
-                                <h2 className="text-lg font-bold text-foreground">Security</h2>
-                                <p className="text-sm text-muted">Update your password</p>
+                                <h2 className="text-lg font-bold text-slate-900">Security</h2>
+                                <p className="text-sm text-slate-500">Update your account password</p>
                             </div>
                         </div>
-                        <button className="p-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">
+                        <button className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600 transition-colors">
                             {isSecurityExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                         </button>
                     </div>
@@ -246,17 +226,6 @@ export default function SettingsPage() {
                         </div>
                     )}
                 </Card>
-
-                {/* Sign Out Zone */}
-                <div className="pt-2 flex justify-center">
-                    <Button
-                        variant="outline"
-                        onClick={logout}
-                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 hover:text-red-700 dark:border-red-800 dark:hover:bg-red-900/30 transition-colors"
-                    >
-                        <LogOut className="w-4 h-4 mr-2" /> Sign Out
-                    </Button>
-                </div>
             </div>
         </div>
     );

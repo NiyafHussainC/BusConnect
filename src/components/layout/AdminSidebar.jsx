@@ -4,9 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import { LayoutDashboard, Users, CheckCircle, CreditCard, Settings, LogOut } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export function AdminSidebar() {
     const pathname = usePathname();
+    const { logout } = useAuth();
 
     const links = [
         { href: "/admin", label: "Overview", icon: LayoutDashboard },
@@ -43,7 +45,10 @@ export function AdminSidebar() {
             </div>
 
             <div className="absolute bottom-0 w-full p-6 border-t border-white/10">
-                <button className="flex items-center gap-3 text-slate-400 hover:text-red-400 transition-colors text-sm font-medium w-full">
+                <button
+                    onClick={logout}
+                    className="flex items-center gap-3 text-slate-400 hover:text-red-400 transition-colors text-sm font-medium w-full"
+                >
                     <LogOut className="w-5 h-5" />
                     Sign Out
                 </button>

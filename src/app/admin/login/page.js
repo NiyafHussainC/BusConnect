@@ -20,21 +20,15 @@ export default function AdminLogin() {
         e.preventDefault();
         setLoading(true);
 
-        // Simulate Admin Login
-        setTimeout(() => {
-            // In a real app, verify against admin credentials
-            if (email === "admin@bustrack.com" && password === "admin123") {
-                login('admin', { name: "System Administrator", email });
-                router.push("/admin/approvals"); // Redirect to approvals or dashboard
-            } else if (email && password) {
-                // Allow any for demo purposes if specific creds not required
-                login('admin', { name: "Admin User", email });
-                router.push("/admin/approvals");
-            } else {
-                alert("Please enter valid credentials");
-                setLoading(false);
-            }
-        }, 1500);
+        const result = login(email, password, 'admin');
+
+        if (result.success) {
+            // Router push is handled in login method or we can safely redirect here
+            router.push("/admin/approvals");
+        } else {
+            alert(result.message || "Please enter valid credentials");
+            setLoading(false);
+        }
     };
 
     return (
@@ -72,7 +66,7 @@ export default function AdminLogin() {
                     </div>
 
                     <Button type="submit" variant="primary" className="w-full bg-indigo-600 hover:bg-indigo-700" disabled={loading}>
-                        {loading ? "Authenticating..." : "Login to Console"}
+                        {loading ? "Authenticating..." : "Login"}
                     </Button>
                 </form>
 
